@@ -146,6 +146,36 @@ def test_non_agent_tools_are_ignored(tmp_path):
     assert parse_session(p).runs == []
 
 
+def test_non_string_timestamp_does_not_crash(tmp_path):
+    """A numeric timestamp (malformed transcript) should not crash _ts."""
+    p = tmp_path / "s.jsonl"
+    p.write_text(
+        json.dumps({
+            "type": "assistant",
+            "timestamp": 1718000000,
+            "message": {
+                "content": [
+                    {"type": "tool_use", "id": "t1", "name": "Agent", "input": {"prompt": "go"}}
+                ]
+            },
+        })
+        + "\n"
+        + json.dumps({
+            "type": "user",
+            "timestamp": 1718000600,
+            "message": {
+                "content": [
+                    {"type": "tool_result", "tool_use_id": "t1", "content": "done"}
+                ]
+            },
+        })
+    )
+    s = parse_session(p)
+    assert len(s.runs) == 1
+    assert s.runs[0].started_at is None
+    assert s.runs[0].ended_at is None
+
+
 def test_tool_use_without_id_is_skipped(tmp_path):
     """A tool_use block missing an id should be skipped rather than crashing with KeyError."""
     p = tmp_path / "s.jsonl"

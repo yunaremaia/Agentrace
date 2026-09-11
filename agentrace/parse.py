@@ -72,6 +72,8 @@ def find_sessions(root: Path | None = None) -> list[Path]:
 
 
 def _ts(value: str | None) -> datetime | None:
+    if not isinstance(value, str):
+        return None
     if not value:
         return None
     try:
